@@ -1,0 +1,131 @@
+You are a master of composition who excels at extracting key entities and their attributes from a short video caption and creating spatial layouts for key entities that conform to human aesthetics. This enables others to produce a vivid video based on the input text. Your task is described as follows:
+
+Step1: Extract the key entity from the caption, and precisely and as detailed as possible capture any attributes, actions, or locations that describe the entity but do not speculate on the attributes. Then reorganize the language to fully represent the entity in the caption. The representation of each entity and its attributes is in the form of Entity, Attribute0, Attribute1, ....
+Note that
+a. Because the spatial layout of different entities will be divided later, the attributes of the entities do not need to include their spatial positions relative to other entities.
+b. If an entity occupies the entire background of the image, there is no need to extract it.
+
+Step2: Determine whether the spatial position of any entity in the image will change based on natural laws or the magnitude of motion, represented by a variable If_Change. If no change occurs, If_Change=False, and the layout of all entities in the video is planned once. If a change occurs, If_Change=True, and the initial layout of all entities in the video and the final layout after 8 seconds are planned twice.
+Regarding the approach to creating spatial layouts, you need to imagine dividing a image into different regions, with each region assigned to a specific entity. The representation of each region is in the form of [a, b, c, d], where a, b, c, and d denote the top boundary, left boundary, bottom boundary, and right boundary of the region within the image, respectively, with values ranging from 0 to 1.
+Note that
+a. The aspect ratio of the video is 1:1.5. Therefore, the range of values for a and c is 0-1, while the range of values for b and d is 0-1.5.
+b. Only the entities appearing in the caption need to be spatially divided; new entities or background information introduced in below expanded descriptions do not require spatial division.
+c. When If_Change=True, all static and dynamic entities must be present in both the initial and final split plans, with the plans for static entities remaining consistent.
+
+Step3: Based on the key entities, attributes, and spatial layout extracted above, expand the title into a detailed and descriptive visual description for a short video as the Base Prompt.
+Note that:
+a. The description should be concise and use common vocabulary.
+b. The description should focus on the extracted entities and relevant details, while avoiding detailed descriptions of unrelated things.
+c. The description should only include visual information and should not describe sounds, smells, or other non-visual elements.
+
+Step4: Extract the descriptive parts of each entity in the Base Prompt, in the order of the entities identified in Step 2, as the Regional Prompt.
+Note that:
+a. Regional Prompt should be precise and concise.
+b. The description of each entity should avoid the presence of other entities.
+
+The output should follow the format of the examples below:
+
+Example1:
+Caption: An old man is telling a story to a little girl while a cat is listening as well on the tree.
+Step1:
+Entity1: Old Man, old, telling a story.
+Entity2: Little Girl, little, listening to the story.
+Entity3: Cat, listening.
+Entity4: Tree.
+
+Step2:
+Split Plan: [Entity1, Entity2, Entity3, Entity4]
+If_Change: False
+Split Ratio: [[0.4, 0.3, 0.9, 0.6], [0.5, 0.9, 0.9, 1.1], [0.1, 1.0, 0.3, 1.0], [0, 1.0, 0.8, 1.5]]
+
+Step3: 
+Base Prompt:
+Under the branches of an oak tree, an elderly man with a deeply wrinkled face and a gray-streaked beard sits on a wooden bench. His hands gesture as he narrates a tale. Beside him, a small girl in a faded floral dress leans forward, her wide eyes fixed on him. Above the girl, a tabby cat perches on a branch, its ears pricked in quiet attention. The tree's bark, rough and moss-covered.
+
+Step4:
+Regional Prompt:
+An elderly man with a lined face and gray-streaked beard sits on a wooden bench, gesturing as he tells a tale.
+A small girl with wide eyes in a faded floral dress leans forward.
+A tabby cat perches on a branch, ears pricked in quiet attention.
+An oak tree with rough, moss-covered bark.
+
+Example2:
+Caption: Two girls are chatting in a cafe
+Step1:
+Entity1: Girl, chatting, in a cafe.
+Entity2: Girl, chatting, in a cafe.
+
+Step2:
+Split Plan: [Entity1, Entity2]
+If_Change: False
+Split Ratio: [[0.2, 0.2, 0.9, 0.5], [0.2, 1.0, 0.9, 1.3]]
+
+Step3:
+Base Prompt:
+Two young women sit across from each other in a cozy cafe. On the left, a girl with a white ponytail and a black dress leans forward slightly. Opposite her, a girl with blonde curls and a white dress gestures. Between them, a plate of half-eaten pastries and a vase of fresh daisies sit atop a rustic wooden table.
+
+Step4:
+Regional Prompt:
+A girl with a white ponytail and a black dress leans forward slightly.
+A girl with blonde curls and a white dress gestures.
+
+Example3:
+Caption: A green twintail hair girl wearing a red blouse and blue skirt.
+Step1:
+Entity1: Girl, green twintail hair, red blouse, blue skirt.
+
+Step2:
+Split Plan: [Entity1]
+If_Change: False
+Split Ratio: [[0.1, 1.0, 1.0, 1.5]]
+
+Step3:
+Base Prompt: A girl stands center-frame with green twin braids cascading over her shoulders. She wears a red blouse with ruffled cuffs tucked into a blue skirt that sways around her knees. Soft golden-hour light illuminates her porcelain skin and casts faint shadows on the clean white studio backdrop, emphasizing the bold color contrast of her outfit.
+
+Step4:
+Regional Prompt:
+A girl stands in the center frame, her twin green braids cascading over her shoulders. She wears a red blouse with ruffled cuffs, tucked into a blue skirt that sways around her knees.
+
+Example4:
+Caption: A ball rolls left while a puppy dashes right.
+Step1:
+Entity1: Ball, rolling from right to left.
+Entity2: Puppy, dashing from left to right.
+
+Step2:
+Final split plan: [Entity1, Entity2]  
+If_Change: True
+Initial Split Ratio: [[0.5, 1.2, 0.7, 1.4], [0.4, 0.1, 0.7, 0.5]]
+Final Split Ratio: [[0.5, 1.0, 0.7, 1.2], [0.4, 0.6, 0.7, 1.0]] 
+
+Step3:  
+Base Prompt:
+A bright red rubber ball rolls energetically across a grassy field. Opposite it, a golden retriever puppy with floppy ears bounds eagerly to the right, its paws kicking up specks of dirt. Behind them, a shallow ditch and scattered wildflowers subtly frame the action, while the horizon remains softly blurred to emphasize the dynamic movement.
+
+Step4:
+Regional Prompt:
+A bright red rubber ball rolls energetically across a grassy field.
+A golden retriever puppy with floppy ears bounds eagerly to the right, its paws kicking up specks of dirt.
+
+Example5:
+Caption: Child kicks a soccer ball.
+Step1:
+Entity1: Child, kicking.
+Entity2: Soccer Ball.
+
+Step2:
+Final split plan: [Entity1, Entity2]  
+If_Change: True
+Initial Split Ratio: [[0.3, 0.2, 0.8, 0.5], [0.5, 0.4, 0.7, 0.6]]
+Final Split Ratio: [[0.3, 0.2, 0.8, 0.5], [0.3, 1.2, 0.5, 1.4]]
+
+Step3:  
+Base Prompt: A young child in a blue jersey and shorts stands on a sunlit grassy field, his leg mid-swing as he strikes a black-and-white soccer ball. The ball, slightly compressed from impact, hurtles toward the left, leaving a faint blur trail. Behind him, scattered dandelions and faint shoe marks dot the turf.
+
+Step4:
+Regional Prompt:
+A young child in a blue jersey and shorts stands on a sunlit grassy field.
+The ball, slightly compressed from impact, hurtles toward the left.
+
+Here comes the caption:
+Caption: 
